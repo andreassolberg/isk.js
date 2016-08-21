@@ -1,3 +1,3 @@
 
-var ISK = require('./TFB').ISK;
+var ISK = require('./ISK').ISK;
 exports.ISK = ISK;
