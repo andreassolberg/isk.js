@@ -68,7 +68,7 @@ ISK.prototype.getData = function(year, month, day) {
 				return reject()
 			}
 
-			that.debugResponse(response, body);
+			// that.debugResponse(response, body);
 
 
 			// console.log("status code ", response.statusCode);

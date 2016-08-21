@@ -1,6 +1,6 @@
 {
   "name": "isk.js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Getting currency exchange rates from cb.is for ISK",
   "main": "index.js",
   "scripts": {
