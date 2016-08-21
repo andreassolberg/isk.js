@@ -1,0 +1,19 @@
+{
+  "name": "tfbjs",
+  "version": "0.1.2",
+  "description": "Getting JSON data from Trondheim folkebibliotek",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index"
+  },
+  "keywords": [
+    "webscraping"
+  ],
+  "author": "Andreas Åkre Solberg",
+  "license": "LGPL2.1",
+  "dependencies": {
+    "cheerio": "^0.19.0",
+    "feed": "^0.2.6",
+    "request": "^2.61.0"
+  }
+}
