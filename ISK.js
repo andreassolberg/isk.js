@@ -14,11 +14,49 @@ if (typeof String.prototype.startsWith !== 'function') {
 
 
 var ISK = function(config) {
+	this.jar = request.jar();
+	this.state = null
+}
 
-	// this.jar = request.jar();
+ISK.prototype.fetchState = function() {
+	var that = this;
+
+	return new Promise(function(resolve, reject) {
+		if (that.state !== null) {
+			return resolve()
+		}
+
+		var url = 'http://cb.is/statistics/offical-exchange-rate/';
+		// console.log("fetch state", url)
+		request({
+			"url": url,
+			"method": "GET",
+			"jar": that.jar,
+			"headers": {
+				'user-agent': 'ISK.js (http://github.com/andreassolberg) We love Iceland, and request your currency rates in peace.',
+				'referer': url
+			}
+		}, function(error, response, body) {
+
+			if (error) {
+				return reject()
+			}
+			// that.debugResponse(response, body);
+			var $ = cheerio.load(body);
+			var data = {
+				"__VIEWSTATEGENERATOR": $("input#__VIEWSTATEGENERATOR").attr("value"),
+				"__VIEWSTATE": $("input#__VIEWSTATE").attr("value")
+			}
+			that.state = data
+			// console.log("DAATA", data)
+
+			return resolve();
 
 
-};
+
+		});
+	})
+}
 
 
 ISK.prototype.debugResponse = function(res, body) {
@@ -45,79 +83,67 @@ ISK.prototype.debugResponse = function(res, body) {
 ISK.prototype.getData = function(year, month, day) {
 
 	var that = this;
-	return new Promise(function(resolve, reject) {
-
-		var url = 'http://cb.is/statistics/offical-exchange-rate/';
-		request({
-			"url": url,
-			"method": "POST",
-			"form": {
+	return this.fetchState()
+		.then(() => {
+			// console.log("Year", year, "month", month, "day", day)
+			var url = 'http://cb.is/statistics/offical-exchange-rate/';
+			var form = {
 				"ctl00$ctl00$Content$Content$ctl04$ddlDays": day,
 				"ctl00$ctl00$Content$Content$ctl04$ddlMonths": month,
 				"ctl00$ctl00$Content$Content$ctl04$ddlYears": year,
+				"__VIEWSTATEGENERATOR": this.state["__VIEWSTATEGENERATOR"],
+				"__VIEWSTATE": this.state["__VIEWSTATE"],
 				"ctl00$ctl00$Content$Content$ctl04$btnGetGengi": "Search"
-			},
-			// "jar": that.jar,
-			"headers": {
-				'user-agent': 'ISK.js (http://github.com/andreassolberg) We love Iceland, and request your currency rates in peace.',
-				'referer': url
 			}
-		}, function(error, response, body) {
+			// console.log ("---- form", form)
+			return new Promise(function(resolve, reject) {
 
-			if (error) {
-				return reject()
-			}
+				request({
+					"url": url,
+					"method": "POST",
+					"form": form,
+					"jar": that.jar,
+					"headers": {
+						'user-agent': 'ISK.js (http://github.com/andreassolberg) We love Iceland, and request your currency rates in peace.',
+						'referer': url
+					}
+				}, function(error, response, body) {
 
-			// that.debugResponse(response, body);
+					if (error) {
+						return reject()
+					}
+					// that.debugResponse(response, body);
+					var $ = cheerio.load(body);
+					var table = $('table.Gengistafla').eq(0);
+					var data = {};
+					table.find('tr').each(function(i, elem) {
+
+						if (i === 0) {
+							// Skip header
+							return
+						}
+						var e = $(this);
+						var key = e.find('td').eq(0).text();
+						var x = {
+							"buy": parseFloat(e.find('td').eq(1).text()) || null,
+							"sell": parseFloat(e.find('td').eq(2).text()) || null,
+							"mid": parseFloat(e.find('td').eq(3).text())
+						};
+						data[key] = x
+					});
+
+					var dato = $("#ctl00_ctl00_Content_Content_ctl04_lblLastDate").text()
+					// console.log("GOT DATO", dato)
+					return resolve(data);
+				})
 
 
-			// console.log("status code ", response.statusCode);
 
-			var $ = cheerio.load(body);
-
-
-			var table = $('table.Gengistafla').eq(0);
-			// var pb = $('#passordboks');
-			// var msg = $('#main h2').text().trim();
-			//
-			// if (pb.length > 0) {
-			// 	return reject(new Error('Feil brukernavn eller passord'));
-			// } else if (v.length !== 1) {
-			// 	return reject(new Error(msg));
-			// }
-
-
-			var data = {};
-			// var tsnow = (new Date()).getTime();
-			// var dr = /(\d{2})\/(\d{2})\/(\d{4})/;
-
-			table.find('tr').each(function(i, elem) {
-
-				if (i === 0) {
-					// Skip header
-					return
-				}
-
-				var e = $(this);
-				// console.log("-------");
-				// console.log();
-				var key = e.find('td').eq(0).text();
-				var x = {
-					"buy": parseFloat(e.find('td').eq(1).text()) || null,
-					"sell": parseFloat(e.find('td').eq(2).text()) || null,
-					"mid": parseFloat(e.find('td').eq(3).text())
-				};
-				data[key] = x
-			});
-
-			return resolve(data);
+			})
 
 
 
 		});
-
-
-	});
 
 }
 
