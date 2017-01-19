@@ -26,7 +26,8 @@ ISK.prototype.fetchState = function() {
 			return resolve()
 		}
 
-		var url = 'http://cb.is/statistics/offical-exchange-rate/';
+		var url = 'http://www.cb.is/statistics/official-exchange-rate/';
+				  //http://www.cb.is/statistics/official-exchange-rate/
 		// console.log("fetch state", url)
 		request({
 			"url": url,
@@ -86,7 +87,7 @@ ISK.prototype.getData = function(year, month, day) {
 	return this.fetchState()
 		.then(() => {
 			// console.log("Year", year, "month", month, "day", day)
-			var url = 'http://cb.is/statistics/offical-exchange-rate/';
+			var url = 'http://www.cb.is/statistics/official-exchange-rate/';
 			var form = {
 				"ctl00$ctl00$Content$Content$ctl04$ddlDays": day,
 				"ctl00$ctl00$Content$Content$ctl04$ddlMonths": month,
